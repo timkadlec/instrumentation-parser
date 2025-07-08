@@ -1,5 +1,5 @@
 import pytest
-from instrumentation_parser import clean_line, normalize_abbr, split_instrumentation_line
+from parser_utils import clean_line, normalize_abbr, split_instrumentation_line
 
 
 def test_clean_line_removes_invisible_and_extra_spaces():
