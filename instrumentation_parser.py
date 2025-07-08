@@ -15,7 +15,15 @@ def normalize_abbr(abbr):
 
 
 def find_instrument_by_abbr(abbr, strict=True):
-    """Find Instrument object by normalized abbreviation."""
+    """Find Instrument object by normalized abbreviation.
+
+    Args:
+        abbr (str): Instrument abbreviation.
+        strict (bool): If True, raise error when not found. If False, return None.
+
+    Returns:
+        Instrument or None
+    """
     normalized = normalize_abbr(abbr)
     instruments = Instrument.query.all()
     for inst in instruments:
@@ -29,14 +37,28 @@ def find_instrument_by_abbr(abbr, strict=True):
 
 
 def clean_line(input_line):
-    """Remove invisible characters and extra spaces from input line."""
+    """Remove invisible characters and extra spaces from input line.
+
+    Args:
+        input_line (str): Raw input string.
+
+    Returns:
+        str: Cleaned string.
+    """
     cleaned = re.sub(r'[\u200b\u200c\u200d\u2060\ufeff]', '', input_line)
     cleaned = re.sub(r'\s+', ' ', cleaned)
     return cleaned.strip()
 
 
 def split_instrumentation_line(input_line):
-    """Split a string representing orchestral instrumentation into logical parts."""
+    """Split a string representing orchestral instrumentation into logical parts.
+
+    Args:
+        input_line (str): Input line with instrumentation data.
+
+    Returns:
+        list[str]: List of parts split by commas.
+    """
     input_line = clean_line(input_line)
 
     parts = []
@@ -61,7 +83,14 @@ def split_instrumentation_line(input_line):
 
 
 def assign_doublings(players, items, separate, find_instrument_func):
-    """Assign doubling instruments to players based on parsed items."""
+    """Assign doubling instruments to players based on parsed items.
+
+    Args:
+        players (list): List of ProjectInstrumentation player objects.
+        items (list): List of doubling definitions (e.g., ['pic', '2eh']).
+        separate (bool): Whether this is separate instrumentation.
+        find_instrument_func (callable): Function to resolve instrument abbreviations.
+    """
     numbered = [item for item in items if re.match(r"^\d+", item)]
     non_numbered = [item for item in items if item not in numbered]
 
@@ -110,6 +139,7 @@ def assign_doublings(players, items, separate, find_instrument_func):
 
 
 def remove_existing_instrumentation(project_id, instrument_id, separate):
+    """Delete existing instrumentation entries for a given instrument and project."""
     existing = ProjectInstrumentation.query.filter_by(
         project_id=project_id,
         instrument_id=instrument_id,
@@ -120,6 +150,7 @@ def remove_existing_instrumentation(project_id, instrument_id, separate):
 
 
 def remove_existing_group_instrumentation(project_id, section_id, group_id):
+    """Delete all existing group instrumentations of a specific section and group."""
     group_instruments = Instrument.query.filter(
         Instrument.instrument_section_id == section_id,
         Instrument.instrument_group_id == group_id,
@@ -136,7 +167,15 @@ def remove_existing_group_instrumentation(project_id, section_id, group_id):
 
 
 def process_instrumentation_block(project_id, section_id, instrument, block, separate=False):
-    """Parse and apply an instrumentation block string to the database."""
+    """Parse and apply an instrumentation block string to the database.
+
+    Args:
+        project_id (int): ID of the project to apply instrumentation to.
+        section_id (int): ID of the instrument section (e.g., strings).
+        instrument (Instrument): Instrument object being processed.
+        block (str): Instrumentation block string to parse.
+        separate (bool): Whether the instrumentation is for a separate part.
+    """
     separate_parts = []
 
     match = re.match(r"(\d+)?\((.*?)\)(.*)", block)
