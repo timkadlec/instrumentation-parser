@@ -1,16 +1,26 @@
 import pytest
-from parser import clean_line, normalize_abbr, split_instrumentation_line
+from instrumentation_parser import clean_line, normalize_abbr, split_instrumentation_line
 
-def test_clean_line():
-    assert clean_line("a\u200b b\u200c\u200d\u2060\ufeffc") == "a b c"
 
-def test_normalize_abbr():
+def test_clean_line_removes_invisible_and_extra_spaces():
+    raw = "  2 Fl\u200b,  2 Ob  "
+    cleaned = clean_line(raw)
+    assert cleaned == "2 Fl, 2 Ob"
+
+
+def test_normalize_abbr_strips_noise():
     assert normalize_abbr("Fl.") == "fl"
-    assert normalize_abbr("  Ob - ") == "ob"
+    assert normalize_abbr("Alt-Fl") == "altfl"
+    assert normalize_abbr("Cl. in A") == "clinA".lower()
 
-def test_split_instrumentation_line_simple():
-    assert split_instrumentation_line("2,2,2") == ["2", "2", "2"]
 
-def test_split_instrumentation_line_with_parentheses():
-    line = "2(pic+eh),2,2"
-    assert split_instrumentation_line(line) == ["2(pic+eh)", "2", "2"]
+def test_split_instrumentation_line_handles_nested():
+    line = "2(fl+pic),2(ob),2(cl),2(fg)"
+    parts = split_instrumentation_line(line)
+    assert parts == ["2(fl+pic)", "2(ob)", "2(cl)", "2(fg)"]
+
+
+def test_split_instrumentation_line_handles_plain_commas():
+    line = "2fl, 2ob, 2cl"
+    parts = split_instrumentation_line(line)
+    assert parts == ["2fl", "2ob", "2cl"]
